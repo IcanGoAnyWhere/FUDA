@@ -24,11 +24,60 @@ from mmdet.utils import (build_ddp, build_dp, compat_cfg, get_device,
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
-    parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+
+    # coco================================================
+
+    # parser.add_argument(
+    #     '--checkpoint', help='checkpoint file',
+    #     default='../checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth')
+    #
+    # parser.add_argument(
+    #     '--config', help='test config file path',
+    #     default='../configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py')
+
+    # coco================================================
+
+    # cityscapes================================================
+
+    parser.add_argument(
+        '--config', help='test config file path',
+        default='../configs/cityscapes/faster_rcnn_r50_fpn_1x_cityscapes.py')
+    parser.add_argument(
+        '--checkpoint', help='checkpoint file',
+        default='../work_dirs/faster_rcnn_r50_fpn_1x_cityscapes/epoch_50.pth')
+
+    # cityscapes================================================
+
+    parser.add_argument(
+        '--eval',
+        type=str,
+        nargs='+',
+        default='bbox',
+        help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
+        ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
+    parser.add_argument('--show',
+                        # action='store_true',
+                        help='show results', default=False)
+    parser.add_argument(
+        '--show-dir', help='directory where painted images will be saved')
+    parser.add_argument(
+        '--show-score-thr',
+        type=float,
+        default=0.3,
+        help='score threshold (default: 0.3)')
+    parser.add_argument(
+        '--options',
+        nargs='+',
+        action=DictAction,
+        default= dict(classwise=True),
+        help='custom options for evaluation, the key-value pair in xxx=yyy '
+        'format will be kwargs for dataset.evaluate() function (deprecate), '
+        'change to --eval-options instead.')
+
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
+
     parser.add_argument('--out', help='output result file in pickle format')
     parser.add_argument(
         '--fuse-conv-bn',
@@ -53,20 +102,11 @@ def parse_args():
         help='Format the output results without perform evaluation. It is'
         'useful when you want to format the result to a specific format and '
         'submit it to the test server')
-    parser.add_argument(
-        '--eval',
-        type=str,
-        nargs='+',
-        help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
-        ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
-    parser.add_argument('--show', action='store_true', help='show results')
-    parser.add_argument(
-        '--show-dir', help='directory where painted images will be saved')
-    parser.add_argument(
-        '--show-score-thr',
-        type=float,
-        default=0.3,
-        help='score threshold (default: 0.3)')
+
+
+
+
+
     parser.add_argument(
         '--gpu-collect',
         action='store_true',
@@ -85,13 +125,7 @@ def parse_args():
         'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
         'Note that the quotation marks are necessary and that no white space '
         'is allowed.')
-    parser.add_argument(
-        '--options',
-        nargs='+',
-        action=DictAction,
-        help='custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function (deprecate), '
-        'change to --eval-options instead.')
+
     parser.add_argument(
         '--eval-options',
         nargs='+',
