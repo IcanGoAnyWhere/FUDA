@@ -10,15 +10,35 @@ import pycocotools.mask as maskUtils
 
 
 def collect_files(img_dir, gt_dir):
-    suffix = 'leftImg8bit.png'
+    suffix = ((
+        'leftImg8bit_foggy_beta_0.01.png',
+        'leftImg8bit_foggy_beta_0.02.png',
+        'leftImg8bit_foggy_beta_0.005.png'))
     files = []
     for img_file in glob.glob(osp.join(img_dir, '**/*.png')):
-        assert img_file.endswith(suffix), img_file
-        inst_file = gt_dir + img_file[
-            len(img_dir):-len(suffix)] + 'gtFine_instanceIds.png'
-        # Note that labelIds are not converted to trainId for seg map
-        segm_file = gt_dir + img_file[
-            len(img_dir):-len(suffix)] + 'gtFine_labelIds.png'
+        # assert img_file.endswith(suffix)
+        assert img_file
+        if img_file.endswith(suffix[0]):
+            inst_file = gt_dir + img_file[
+                len(img_dir):-len(suffix[0])] + 'gtFine_instanceIds.png'
+            # Note that labelIds are not converted to trainId for seg map
+            segm_file = gt_dir + img_file[
+                len(img_dir):-len(suffix[0])] + 'gtFine_labelIds.png'
+
+        elif img_file.endswith(suffix[1]):
+            inst_file = gt_dir + img_file[
+                len(img_dir):-len(suffix[1])] + 'gtFine_instanceIds.png'
+            # Note that labelIds are not converted to trainId for seg map
+            segm_file = gt_dir + img_file[
+                len(img_dir):-len(suffix[1])] + 'gtFine_labelIds.png'
+
+        else:
+            inst_file = gt_dir + img_file[
+                len(img_dir):-len(suffix[2])] + 'gtFine_instanceIds.png'
+            # Note that labelIds are not converted to trainId for seg map
+            segm_file = gt_dir + img_file[
+                len(img_dir):-len(suffix[2])] + 'gtFine_labelIds.png'
+
         files.append((img_file, inst_file, segm_file))
     assert len(files), f'No images found in {img_dir}'
     print(f'Loaded {len(files)} images from {img_dir}')
@@ -116,17 +136,17 @@ def parse_args():
         description='Convert Cityscapes annotations to COCO format')
     parser.add_argument(
         '--cityscapes_path',
-        default='../../data/cityscapes',
+        default='../../data/cityscapes_foggy',
         help='cityscapes data path')
     parser.add_argument(
         '--img-dir',
-        default='leftImg8bit', type=str)
+        default='leftImg8bit_foggy', type=str)
     parser.add_argument(
         '--gt-dir',
         default='gtFine', type=str)
     parser.add_argument(
         '-o', '--out-dir',
-        default='../../data/cityscapes/annotations',
+        default='../../data/cityscapes_foggy/annotations',
         help='output path')
     parser.add_argument(
         '--nproc',
