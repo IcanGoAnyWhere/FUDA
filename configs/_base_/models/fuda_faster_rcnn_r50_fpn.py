@@ -1,6 +1,6 @@
 # model settings
 model = dict(
-    type='FasterRCNN',
+    type='FUDAFasterRCNN',
     backbone=dict(
         type='ResNet',
         depth=50,

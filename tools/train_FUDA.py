@@ -222,7 +222,9 @@ def main():
 
     # init rfnext if 'RFSearchHook' is defined in cfg
     rfnext_init_model(model, cfg=cfg)
-    datasets = [build_dataset(cfg.data.train)]
+
+    datasets = [build_dataset(cfg.data.train_source)]
+    datasets.append(build_dataset(cfg.data.train_target))
 
     if len(cfg.workflow) == 2:
         assert 'val' in [mode for (mode, _) in cfg.workflow]

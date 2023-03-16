@@ -1,6 +1,6 @@
 _base_ = [
-    '../_base_/models/faster_rcnn_r50_fpn.py',
-    '../_base_/datasets/cityscapes_detection_foggy.py',
+    '../_base_/models/fuda_faster_rcnn_r50_fpn.py',
+    # '../_base_/datasets/cityscapes_detection.py',
     '../_base_/default_runtime.py'
 ]
 model = dict(
@@ -20,6 +20,114 @@ model = dict(
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
             loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))))
+
+# dataset for FUDA
+
+dataset_type = 'CityscapesDataset'
+data_root_source = '../data/cityscapes/'
+data_root_target = '../data/cityscapes_foggy/'
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations', with_bbox=True),
+    dict(
+        type='Resize', img_scale=[(2048, 800), (2048, 1024)], keep_ratio=True),
+    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='Pad', size_divisor=32),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(2048, 1024),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Pad', size_divisor=32),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img']),
+        ])
+]
+data = dict(
+    samples_per_gpu=1,
+    workers_per_gpu=2,
+    # cityscapes
+    train_source=dict(
+        type='RepeatDataset',
+        times=8,
+        dataset=dict(
+            type=dataset_type,
+            ann_file=data_root_source +
+                     'annotations/instancesonly_filtered_gtFine_train.json',
+            img_prefix=data_root_source + 'leftImg8bit/train/',
+            pipeline=train_pipeline)),
+    val_source=dict(
+        type=dataset_type,
+        ann_file=data_root_source +
+                 'annotations/instancesonly_filtered_gtFine_val.json',
+        img_prefix=data_root_source + 'leftImg8bit/val/',
+        pipeline=test_pipeline),
+    test_source=dict(
+        type=dataset_type,
+        ann_file=data_root_source +
+                 'annotations/instancesonly_filtered_gtFine_val.json',
+        img_prefix=data_root_source + 'leftImg8bit/val/',
+        pipeline=test_pipeline),
+    # cityscapes_foggy
+    train_target=dict(
+        type='RepeatDataset',
+        times=8,
+        dataset=dict(
+            type=dataset_type,
+            ann_file=data_root_target +
+                     'annotations/instancesonly_filtered_gtFine_train.json',
+            img_prefix=data_root_target + 'leftImg8bit_foggy/train/',
+            pipeline=train_pipeline)),
+    val_target=dict(
+        type=dataset_type,
+        ann_file=data_root_target +
+                 'annotations/instancesonly_filtered_gtFine_val.json',
+        img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
+        pipeline=test_pipeline),
+    test_target=dict(
+        type=dataset_type,
+        ann_file=data_root_target +
+                 'annotations/instancesonly_filtered_gtFine_val.json',
+        img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
+        pipeline=test_pipeline)
+)
+
+data_target = dict(
+    samples_per_gpu=1,
+    workers_per_gpu=2,
+    train=dict(
+        type='RepeatDataset',
+        times=8,
+        dataset=dict(
+            type=dataset_type,
+            ann_file=data_root_target +
+            'annotations/instancesonly_filtered_gtFine_train.json',
+            img_prefix=data_root_target + 'leftImg8bit_foggy/train/',
+            pipeline=train_pipeline)),
+    val=dict(
+        type=dataset_type,
+        ann_file=data_root_target +
+        'annotations/instancesonly_filtered_gtFine_val.json',
+        img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
+        pipeline=test_pipeline),
+    test=dict(
+        type=dataset_type,
+        ann_file=data_root_target +
+        'annotations/instancesonly_filtered_gtFine_val.json',
+        img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
+        pipeline=test_pipeline))
+evaluation = dict(interval=1, metric='bbox')
 
 # optimizer
 # lr is set for a batch size of 8

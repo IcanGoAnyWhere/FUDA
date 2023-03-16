@@ -26,6 +26,7 @@ def collect_files(img_dir, gt_dir):
                 len(img_dir):-len(suffix[0])] + 'gtFine_labelIds.png'
 
         elif img_file.endswith(suffix[1]):
+        # if img_file.endswith(suffix[1]):
             inst_file = gt_dir + img_file[
                 len(img_dir):-len(suffix[1])] + 'gtFine_instanceIds.png'
             # Note that labelIds are not converted to trainId for seg map
