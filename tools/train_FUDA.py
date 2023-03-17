@@ -224,6 +224,7 @@ def main():
     rfnext_init_model(model, cfg=cfg)
 
     datasets = [build_dataset(cfg.data.train_source)]
+
     datasets.append(build_dataset(cfg.data.train_target))
 
     if len(cfg.workflow) == 2:
