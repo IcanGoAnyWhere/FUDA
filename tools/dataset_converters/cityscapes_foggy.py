@@ -13,9 +13,10 @@ def collect_files(img_dir, gt_dir):
     suffix = ((
         'leftImg8bit_foggy_beta_0.01.png',
         'leftImg8bit_foggy_beta_0.02.png',
-        'leftImg8bit_foggy_beta_0.005.png'))
+        'leftImg8bit_foggy_beta_0.005.png'
+    ))
     files = []
-    for img_file in glob.glob(osp.join(img_dir, '**/*.png')):
+    for img_file in glob.glob(osp.join(img_dir, '**/*2.png')):  # use '*2/*1/*5' to select fog level
         # assert img_file.endswith(suffix)
         assert img_file
         if img_file.endswith(suffix[0]):
