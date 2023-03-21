@@ -30,7 +30,7 @@ PIPELINES = Registry('pipeline')
 
 
 def _concat_dataset(cfg, default_args=None):
-    from .dataset_wrappers import ConcatDataset
+    from .dataset_wrappers import ConcatDataset, ConcatDatasetFUDA
     ann_files = cfg['ann_file']
     img_prefixes = cfg.get('img_prefix', None)
     seg_prefixes = cfg.get('seg_prefix', None)
@@ -53,7 +53,8 @@ def _concat_dataset(cfg, default_args=None):
             data_cfg['proposal_file'] = proposal_files[i]
         datasets.append(build_dataset(data_cfg, default_args))
 
-    return ConcatDataset(datasets, separate_eval)
+    return ConcatDatasetFUDA(datasets, separate_eval) if cfg.get('DA_mode', True) \
+        else ConcatDataset(datasets, separate_eval)
 
 
 def build_dataset(cfg, default_args=None):
