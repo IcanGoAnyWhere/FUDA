@@ -7,7 +7,7 @@ import os
 import os.path as osp
 import tempfile
 from collections import OrderedDict
-
+import warnings
 import mmcv
 import numpy as np
 import pycocotools.mask as maskUtils
@@ -15,13 +15,15 @@ from mmcv.utils import print_log
 
 from .builder import DATASETS
 from .coco import CocoDataset
+from .pipelines import Compose
 
 
 @DATASETS.register_module()
-class CityscapesDataset(CocoDataset):
+class CityscapesDataset_fuda(CocoDataset):
     def __init__(self,
                  ann_file,
                  pipeline,
+                 DA_mode,
                  classes=None,
                  data_root=None,
                  img_prefix='',
@@ -32,6 +34,7 @@ class CityscapesDataset(CocoDataset):
                  filter_empty_gt=True,
                  file_client_args=dict(backend='disk')):
         self.ann_file = ann_file
+        self.DA_mode = DA_mode
         self.data_root = data_root
         self.img_prefix = img_prefix
         self.seg_prefix = seg_prefix
@@ -42,11 +45,108 @@ class CityscapesDataset(CocoDataset):
         self.file_client = mmcv.FileClient(**file_client_args)
         self.CLASSES = self.get_classes(classes)
 
+        # join paths if data_root is specified
+        if self.data_root is not None:
+            if not osp.isabs(self.ann_file):
+                self.ann_file = osp.join(self.data_root, self.ann_file)
+            if not (self.img_prefix is None or osp.isabs(self.img_prefix)):
+                self.img_prefix = osp.join(self.data_root, self.img_prefix)
+            if not (self.seg_prefix is None or osp.isabs(self.seg_prefix)):
+                self.seg_prefix = osp.join(self.data_root, self.seg_prefix)
+            if not (self.proposal_file is None
+                    or osp.isabs(self.proposal_file)):
+                self.proposal_file = osp.join(self.data_root,
+                                              self.proposal_file)
+
+        if hasattr(self.file_client, 'get_local_path'):
+            with self.file_client.get_local_path(self.ann_file) as local_path:
+                self.data_infos = self.load_annotations(local_path)
+        else:
+            warnings.warn(
+                'The used MMCV version does not have get_local_path. '
+                f'We treat the {self.ann_file} as local paths and it '
+                'might cause errors if the path is not a local path. '
+                'Please use MMCV>= 1.3.16 if you meet errors.')
+            self.data_infos = self.load_annotations(self.ann_file)
+
+
+        if self.proposal_file is not None:
+            if hasattr(self.file_client, 'get_local_path'):
+                with self.file_client.get_local_path(
+                        self.proposal_file) as local_path:
+                    self.proposals = self.load_proposals(local_path)
+            else:
+                warnings.warn(
+                    'The used MMCV version does not have get_local_path. '
+                    f'We treat the {self.ann_file} as local paths and it '
+                    'might cause errors if the path is not a local path. '
+                    'Please use MMCV>= 1.3.16 if you meet errors.')
+                self.proposals = self.load_proposals(self.proposal_file)
+        else:
+            self.proposals = None
+
+        # filter images too small and containing no annotations
+        if not test_mode:
+            valid_inds = self._filter_imgs()
+            self.data_infos = [self.data_infos[i] for i in valid_inds]
+            if self.proposals is not None:
+                self.proposals = [self.proposals[i] for i in valid_inds]
+            # set group flag for the sampler
+            self._set_group_flag()
+        # processing pipeline
+        self.pipeline = Compose(pipeline)
+
+
+
+
     CLASSES = ('person', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle',
                'bicycle')
 
     PALETTE = [(220, 20, 60), (255, 0, 0), (0, 0, 142), (0, 0, 70),
                (0, 60, 100), (0, 80, 100), (0, 0, 230), (119, 11, 32)]
+
+
+    def __getitem__(self, idx):
+        """Get training/test data after pipeline.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            dict: Training/test data (with annotation if `test_mode` is set \
+                True).
+        """
+
+        if self.test_mode:
+            return self.prepare_test_img(idx)
+        while True:
+            data = self.prepare_train_img(idx)
+            if data is None:
+                idx = self._rand_another(idx)
+                continue
+            return data
+
+    def prepare_train_img(self, idx):
+        """Get training data and annotations after pipeline.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            dict: Training data and annotation after pipeline with new keys \
+                introduced by pipeline.
+        """
+
+        img_info = self.data_infos[idx]
+        ann_info = self.get_ann_info(idx)
+        results = dict(img_info=img_info, ann_info=ann_info)
+        if self.proposals is not None:
+            results['proposals'] = self.proposals[idx]
+        self.pre_pipeline(results)
+        return self.pipeline(results)
+
+
+
 
     def _filter_imgs(self, min_size=32):
         """Filter images too small or without ground truths."""

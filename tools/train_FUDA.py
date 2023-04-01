@@ -225,7 +225,7 @@ def main():
 
     datasets = [build_dataset(cfg.data.train_source)]
 
-    datasets.append(build_dataset(cfg.data.train_target))
+    # datasets.append(build_dataset(cfg.data.train_target))
 
     if len(cfg.workflow) == 2:
         assert 'val' in [mode for (mode, _) in cfg.workflow]

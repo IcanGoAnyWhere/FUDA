@@ -55,13 +55,9 @@ class ConcatDatasetFUDA(_ConcatDataset):
             sample_idx = idx
         else:
             sample_idx = idx - self.cumulative_sizes[dataset_idx - 1]
-        # dataset_concat = dict(dataset_source=self.datasets[0][sample_idx],
-        #                       dataset_target=self.datasets[1][sample_idx])
-        # dataset_concat = self.datasets[0][sample_idx]
 
-        dataset_concat = dict(img_metas=self.datasets[0][sample_idx]['img_metas'],
-                                       # self.datasets[1][sample_idx]['img_metas']
-                                       #   ],
+        dataset_concat = dict(img_metas=[self.datasets[0][sample_idx]['img_metas'],
+                                       self.datasets[1][sample_idx]['img_metas']],
                               img=[self.datasets[0][sample_idx]['img'],
                                        self.datasets[1][sample_idx]['img']],
                               gt_bboxes=[self.datasets[0][sample_idx]['gt_bboxes']],

@@ -1,7 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from ..builder import DETECTORS
 from .two_stage import TwoStageDetector
-
+from mmcv.runner import  auto_fp16
+import torch
 
 @DETECTORS.register_module()
 class FUDAFasterRCNN(TwoStageDetector):
@@ -26,6 +27,27 @@ class FUDAFasterRCNN(TwoStageDetector):
             test_cfg=test_cfg,
             pretrained=pretrained,
             init_cfg=init_cfg)
+
+    @auto_fp16(apply_to=('img',))
+    def forward(self, img, img_metas, return_loss=True, **kwargs):
+        """Calls either :func:`forward_train` or :func:`forward_test` depending
+        on whether ``return_loss`` is ``True``.
+
+        Note this setting will change the expected inputs. When
+        ``return_loss=True``, img and img_meta are single-nested (i.e. Tensor
+        and List[dict]), and when ``resturn_loss=False``, img and img_meta
+        should be double nested (i.e.  List[Tensor], List[List[dict]]), with
+        the outer list indicating test time augmentations.
+        """
+
+        if torch.onnx.is_in_onnx_export():
+            assert len(img_metas) == 1
+            return self.onnx_export(img[0], img_metas[0])
+
+        if return_loss:
+            return self.forward_train(img, img_metas, **kwargs)
+        else:
+            return self.forward_test(img, img_metas, **kwargs)
 
     def forward_train(self,
                       img,
@@ -64,7 +86,14 @@ class FUDAFasterRCNN(TwoStageDetector):
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
-        x = self.extract_feat(img)
+        img_source = img[0]
+        img_target = img[1]
+        fea_s = self.extract_feat(img_source)
+        fea_t = self.extract_feat(img_target)
+
+        img_metas_s = img_metas[0]
+        img_metas_t = img_metas[1]
+
 
         losses = dict()
 
@@ -73,8 +102,8 @@ class FUDAFasterRCNN(TwoStageDetector):
             proposal_cfg = self.train_cfg.get('rpn_proposal',
                                               self.test_cfg.rpn)
             rpn_losses, proposal_list = self.rpn_head.forward_train(
-                x,
-                img_metas,
+                fea_s,
+                img_metas_s,
                 gt_bboxes,
                 gt_labels=None,
                 gt_bboxes_ignore=gt_bboxes_ignore,
@@ -84,7 +113,7 @@ class FUDAFasterRCNN(TwoStageDetector):
         else:
             proposal_list = proposals
 
-        roi_losses = self.roi_head.forward_train(x, img_metas, proposal_list,
+        roi_losses = self.roi_head.forward_train(fea_s, img_metas_s, proposal_list,
                                                  gt_bboxes, gt_labels,
                                                  gt_bboxes_ignore, gt_masks,
                                                  **kwargs)
