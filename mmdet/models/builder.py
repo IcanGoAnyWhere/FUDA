@@ -7,6 +7,7 @@ from mmcv.utils import Registry
 MODELS = Registry('models', parent=MMCV_MODELS)
 
 BACKBONES = MODELS
+DA_IMAGE = MODELS
 NECKS = MODELS
 ROI_EXTRACTORS = MODELS
 SHARED_HEADS = MODELS
@@ -18,6 +19,9 @@ DETECTORS = MODELS
 def build_backbone(cfg):
     """Build backbone."""
     return BACKBONES.build(cfg)
+def build_da_image(cfg):
+    """Build da_image."""
+    return DA_IMAGE.build(cfg)
 
 
 def build_neck(cfg):

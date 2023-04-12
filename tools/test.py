@@ -41,10 +41,10 @@ def parse_args():
 
     parser.add_argument(
         '--config', help='test config file path',
-        default='../configs/cityscapes/faster_rcnn_r50_fpn_1x_cityscapes.py')
+        default='../configs/cityscapes/fuda_faster_rcnn_r50_fpn_1x_cityscapes.py')
     parser.add_argument(
         '--checkpoint', help='checkpoint file',
-        default='../work_dirs/faster_rcnn_r50_fpn_1x_cityscapes/epoch_50.pth')
+        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_53.pth')
 
     # cityscapes================================================
 

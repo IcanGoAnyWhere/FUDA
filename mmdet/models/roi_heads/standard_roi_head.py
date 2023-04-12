@@ -104,6 +104,8 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
             bbox_results = self._bbox_forward_train(x, sampling_results,
                                                     gt_bboxes, gt_labels,
                                                     img_metas)
+
+
             losses.update(bbox_results['loss_bbox'])
 
         # mask head forward and loss

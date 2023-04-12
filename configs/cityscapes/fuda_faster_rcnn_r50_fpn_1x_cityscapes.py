@@ -3,6 +3,7 @@ _base_ = [
     # '../_base_/datasets/cityscapes_detection.py',
     '../_base_/default_runtime.py'
 ]
+
 model = dict(
     backbone=dict(init_cfg=None),
     roi_head=dict(
@@ -73,19 +74,12 @@ data = dict(
                          'annotations/instancesonly_filtered_gtFine_train.json'
                           ],
                 img_prefix=[data_root_source + 'leftImg8bit/train/',
-                          data_root_target + 'leftImg8bit_foggy/train/'],
+                          data_root_target + 'leftImg8bit_foggy/train/'
+                            ],
                 pipeline=train_pipeline)
         )),
-    # cityscapes_foggy
-    # train_target=dict(
-    #     type='RepeatDataset',
-    #     times=8,
-    #     dataset=dict(
-    #         type=dataset_type,
-    #         ann_file=data_root_target +
-    #                  'annotations/instancesonly_filtered_gtFine_train.json',
-    #         img_prefix=data_root_target + 'leftImg8bit_foggy/train/',
-    #         pipeline=train_pipeline)),
+
+
     val=dict(
         type=dataset_type_val,
         ann_file=data_root_target +
@@ -104,7 +98,7 @@ evaluation = dict(interval=1, metric='bbox')
 
 # optimizer
 # lr is set for a batch size of 8
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -115,7 +109,7 @@ lr_config = dict(
     # [7] yields higher performance than [6]
     step=[7])
 runner = dict(
-    type='EpochBasedRunner', max_epochs=51)  # actual epoch = 8 * 8 = 64
+    type='EpochBasedRunner', max_epochs=20)  # actual epoch = 8 * 8 = 64
 log_config = dict(interval=100)
 # For better, more stable performance initialize from COCO
 load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'  # noqa
@@ -123,4 +117,4 @@ load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_
 # NOTE: `auto_scale_lr` is for automatically scaling LR,
 # USER SHOULD NOT CHANGE ITS VALUES.
 # base_batch_size = (8 GPUs) x (1 samples per GPU)
-auto_scale_lr = dict(base_batch_size=4)
+auto_scale_lr = dict(base_batch_size=1)

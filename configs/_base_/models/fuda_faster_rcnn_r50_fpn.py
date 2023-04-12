@@ -11,6 +11,7 @@ model = dict(
         norm_eval=True,
         style='pytorch',
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
+    da_image=dict(type='FUA'),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -33,7 +34,12 @@ model = dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
-        type='StandardRoIHead',
+        type='IUARoIHead',
+        Uncertain_map_extractor=dict(
+            type='UncertaintyMapExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            out_channels=1,
+            featmap_strides=[4, 8, 16, 32]),
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),

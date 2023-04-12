@@ -47,6 +47,7 @@ class BboxOverlaps2D:
         """
         assert bboxes1.size(-1) in [0, 4, 5]
         assert bboxes2.size(-1) in [0, 4, 5]
+
         if bboxes2.size(-1) == 5:
             bboxes2 = bboxes2[..., :4]
         if bboxes1.size(-1) == 5:

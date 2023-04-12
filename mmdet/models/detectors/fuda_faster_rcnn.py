@@ -1,16 +1,16 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from ..builder import DETECTORS
-from .two_stage import TwoStageDetector
+from .two_stage import TwoStageDetector, TwoStageDetectorWithDA
 from mmcv.runner import  auto_fp16
 import torch
 
 @DETECTORS.register_module()
-class FUDAFasterRCNN(TwoStageDetector):
+class FUDAFasterRCNN(TwoStageDetectorWithDA):
     """Implementation of `Faster R-CNN <https://arxiv.org/abs/1506.01497>`_"""
 
     def __init__(self,
                  backbone,
-                 # FUA,
+                 da_image,
                  rpn_head,
                  roi_head,
                  train_cfg,
@@ -20,6 +20,7 @@ class FUDAFasterRCNN(TwoStageDetector):
                  init_cfg=None):
         super(FUDAFasterRCNN, self).__init__(
             backbone=backbone,
+            da_image=da_image,
             neck=neck,
             rpn_head=rpn_head,
             roi_head=roi_head,
@@ -86,6 +87,7 @@ class FUDAFasterRCNN(TwoStageDetector):
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
+
         img_source = img[0]
         img_target = img[1]
         fea_s = self.extract_feat(img_source)
@@ -94,8 +96,17 @@ class FUDAFasterRCNN(TwoStageDetector):
         img_metas_s = img_metas[0]
         img_metas_t = img_metas[1]
 
+        gt_bboxes = gt_bboxes[0]
+        gt_labels = gt_labels[0]
 
         losses = dict()
+
+        if self.da_image is not None:
+            loss_img_s, uncertainty_map = self.da_image.forward(fea_s[4], torch.tensor(0))
+            loss_img_t, _ = self.da_image.forward(fea_t[4], torch.tensor(1))
+            da_loss = dict(da_img_s_loss=torch.tensor(1) * loss_img_s,
+                           da_img_t_loss=torch.tensor(1) * loss_img_t)
+            losses.update(da_loss)
 
         # RPN forward and loss
         if self.with_rpn:
@@ -113,10 +124,15 @@ class FUDAFasterRCNN(TwoStageDetector):
         else:
             proposal_list = proposals
 
-        roi_losses = self.roi_head.forward_train(fea_s, img_metas_s, proposal_list,
+        roi_losses = self.roi_head.forward_train(fea_s, uncertainty_map, img_metas_s, proposal_list,
                                                  gt_bboxes, gt_labels,
                                                  gt_bboxes_ignore, gt_masks,
                                                  **kwargs)
         losses.update(roi_losses)
+
+
+
+
+
 
         return losses
