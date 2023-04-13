@@ -37,7 +37,7 @@ model = dict(
         type='IUARoIHead',
         Uncertain_map_extractor=dict(
             type='UncertaintyMapExtractor',
-            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            roi_layer=dict(type='RoIAlign', output_size=1, sampling_ratio=0),
             out_channels=1,
             featmap_strides=[4, 8, 16, 32]),
         bbox_roi_extractor=dict(
@@ -46,11 +46,12 @@ model = dict(
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
-            type='Shared2FCBBoxHead',
+            type='IUABBoxHead',
             in_channels=256,
+            num_align_head=16,
             fc_out_channels=1024,
             roi_feat_size=7,
-            num_classes=80,
+            num_classes=8,
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[0., 0., 0., 0.],

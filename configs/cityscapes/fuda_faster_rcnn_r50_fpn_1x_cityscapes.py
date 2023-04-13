@@ -7,8 +7,19 @@ _base_ = [
 model = dict(
     backbone=dict(init_cfg=None),
     roi_head=dict(
+        type='IUARoIHead',
+        Uncertain_map_extractor=dict(
+            type='UncertaintyMapExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=1, sampling_ratio=0),
+            out_channels=1,
+            featmap_strides=[4, 8, 16, 32]),
+        bbox_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
-            type='Shared2FCBBoxHead',
+            type='IUABBoxHead',
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,

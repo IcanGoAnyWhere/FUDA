@@ -10,8 +10,9 @@ from ..builder import DA_IMAGE
 from torch.autograd import Function
 
 def channel_entropy(feature):
+    near_0 = 1e-10
     input_soft = torch.softmax(feature, dim=1)
-    predict_map = torch.log(input_soft)
+    predict_map = torch.log(input_soft+near_0)
     entropy_cha = -predict_map * input_soft
     entropy_cha = torch.sum(entropy_cha, dim=1).detach()
 
@@ -39,12 +40,17 @@ class FUA(nn.Module):
         self.conv2 = nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(128)
         self.conv3 = nn.Conv2d(128, 1, kernel_size=1, stride=1, padding=0, bias=False)
-        self.conv_en = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv_en1 = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding='same', bias=False)
+        self.bn_en1 = nn.BatchNorm2d(1)
+        self.conv_en2 = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding='same', bias=False)
+        self.bn_en2 = nn.BatchNorm2d(1)
 
     def forward(self, feature, domain):
         feature_GRL = GRL.apply(feature)
-        uncertainty_map = channel_entropy(feature_GRL)
-        # cha_en = F.relu(self.conv_en(cha_en))
+        cha_en = channel_entropy(feature_GRL)
+
+        uncertainty_map = F.relu(self.bn_en1(self.conv_en1(cha_en.unsqueeze(0))))
+        uncertainty_map = F.relu(self.bn_en2(self.conv_en2(uncertainty_map)))
 
         x = F.relu(self.bn1(self.conv1(feature_GRL)))
         x = F.relu(self.bn2(self.conv2(x)))
@@ -52,9 +58,9 @@ class FUA(nn.Module):
         out = F.sigmoid(x)
 
         domain_label = domain * torch.ones_like(out)
-
-        loss = -domain_label * torch.log(out) - \
-               (torch.ones_like(out)-domain_label) * torch.log(torch.ones_like(out) - out)
+        near_0 = 1e-10
+        loss = -domain_label * torch.log(out+near_0) - \
+               (torch.ones_like(out)-domain_label) * torch.log(torch.ones_like(out) - out + near_0)
         loss = loss * uncertainty_map
 
         loss = torch.mean(loss)
