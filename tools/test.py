@@ -44,7 +44,7 @@ def parse_args():
         default='../configs/cityscapes/fuda_faster_rcnn_r50_fpn_1x_cityscapes.py')
     parser.add_argument(
         '--checkpoint', help='checkpoint file',
-        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_1.pth')
+        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_51.pth')
 
     # cityscapes================================================
 

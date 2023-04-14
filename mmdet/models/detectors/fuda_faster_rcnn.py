@@ -104,9 +104,9 @@ class FUDAFasterRCNN(TwoStageDetectorWithDA):
         if self.da_image is not None:
             loss_img_s, uncertainty_map_s = self.da_image.forward(fea_s[4], torch.tensor(0))
             loss_img_t, uncertainty_map_t = self.da_image.forward(fea_t[4], torch.tensor(1))
-            da_loss = dict(da_img_s_loss=torch.tensor(1) * loss_img_s,
-                           da_img_t_loss=torch.tensor(1) * loss_img_t)
-            losses.update(da_loss)
+            da_loss = dict(da_img_s_loss=torch.tensor(0) * loss_img_s,
+                           da_img_t_loss=torch.tensor(0) * loss_img_t)
+            # losses.update(da_loss)
 
         # RPN forward and loss
         if self.with_rpn:
@@ -138,10 +138,11 @@ class FUDAFasterRCNN(TwoStageDetectorWithDA):
         loss_bbox_IUA = torch.abs(roi_losses_s['loss_bbox_IUA'] - roi_losses_t['loss_bbox_IUA'])
 
         roi_losses = roi_losses_s
-        roi_losses['loss_cls_IUA'] = loss_cls_IUA * torch.tensor(100)
-        roi_losses['loss_bbox_IUA'] = loss_bbox_IUA * torch.tensor(100)
-
-        losses.update(roi_losses)
+        roi_losses['loss_cls_IUA'] = loss_cls_IUA * torch.tensor(0)
+        roi_losses['loss_bbox_IUA'] = loss_bbox_IUA * torch.tensor(0)
+        losses.update(roi_losses_s)
+        losses.pop('loss_cls_IUA')
+        losses.pop('loss_bbox_IUA')
 
 
         return losses

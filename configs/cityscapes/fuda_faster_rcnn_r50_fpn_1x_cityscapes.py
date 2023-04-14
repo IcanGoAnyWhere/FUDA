@@ -1,6 +1,7 @@
 _base_ = [
     '../_base_/models/fuda_faster_rcnn_r50_fpn.py',
-    # '../_base_/datasets/cityscapes_detection.py',
+    # '../_base_/datasets/cityscapes_detection_foggy.py',
+    '../_base_/datasets/cityscapes_detection.py',
     '../_base_/default_runtime.py'
 ]
 
@@ -91,18 +92,19 @@ data = dict(
         )),
 
 
-    val=dict(
-        type=dataset_type_val,
-        ann_file=data_root_target +
-                 'annotations/instancesonly_filtered_gtFine_val.json',
-        img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
-        pipeline=test_pipeline),
-    test=dict(
-        type=dataset_type_val,
-        ann_file=data_root_target +
-                 'annotations/instancesonly_filtered_gtFine_val.json',
-        img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
-        pipeline=test_pipeline))
+    # val=dict(
+    #     type=dataset_type_val,
+    #     ann_file=data_root_target +
+    #              'annotations/instancesonly_filtered_gtFine_val.json',
+    #     img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
+    #     pipeline=test_pipeline),
+    # test=dict(
+    #     type=dataset_type_val,
+    #     ann_file=data_root_target +
+    #              'annotations/instancesonly_filtered_gtFine_val.json',
+    #     img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
+    #     pipeline=test_pipeline)
+)
 
 
 evaluation = dict(interval=1, metric='bbox')

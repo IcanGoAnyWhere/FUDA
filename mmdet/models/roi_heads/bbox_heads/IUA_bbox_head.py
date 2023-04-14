@@ -9,19 +9,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.runner import  force_fp32
 from mmdet.models.losses import accuracy
-from torch.autograd import Function
-
-class GRL(Function):
-
-    @staticmethod
-    def forward(ctx, input):
-        ctx.alpha = torch.tensor(0.1, requires_grad=True)
-        return input.view_as(input)
-
-    @staticmethod
-    def backward(ctx, grad_outputs):
-        output = grad_outputs.neg() * ctx.alpha
-        return output
 
 @HEADS.register_module()
 class IUAConvFCBBoxHead(BBoxHead):
@@ -194,8 +181,8 @@ class IUAConvFCBBoxHead(BBoxHead):
         x_cls = x
         x_reg = x
 
-        cls_score = self.fc_cls(x_cls)
-        bbox_pred = self.fc_reg(x_reg)
+        cls_score = self.fc_cls(self.dropout(x_cls))
+        bbox_pred = self.fc_reg(self.dropout(x_reg))
 
         IUA_cls_score = []
         IUA_bbox_pred = []
