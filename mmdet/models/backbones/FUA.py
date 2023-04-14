@@ -35,11 +35,12 @@ class GRL(Function):
 class FUA(nn.Module):
     def __init__(self):
         super(FUA, self).__init__()
-        self.conv1 = nn.Conv2d(256, 256, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv1 = nn.Conv2d(257, 256, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(256)
         self.conv2 = nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(128)
         self.conv3 = nn.Conv2d(128, 1, kernel_size=1, stride=1, padding=0, bias=False)
+
         self.conv_en1 = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding='same', bias=False)
         self.bn_en1 = nn.BatchNorm2d(1)
         self.conv_en2 = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding='same', bias=False)
@@ -52,16 +53,20 @@ class FUA(nn.Module):
         uncertainty_map = F.relu(self.bn_en1(self.conv_en1(cha_en.unsqueeze(0))))
         uncertainty_map = F.relu(self.bn_en2(self.conv_en2(uncertainty_map)))
 
-        x = F.relu(self.bn1(self.conv1(feature_GRL)))
+        fea_with_uncer = [feature_GRL, uncertainty_map]
+        fea_with_uncer = torch.cat(fea_with_uncer, dim=1)
+
+        x = F.relu(self.bn1(self.conv1(fea_with_uncer)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.conv3(x))
+
         out = F.sigmoid(x)
 
         domain_label = domain * torch.ones_like(out)
         near_0 = 1e-10
         loss = -domain_label * torch.log(out+near_0) - \
                (torch.ones_like(out)-domain_label) * torch.log(torch.ones_like(out) - out + near_0)
-        loss = loss * uncertainty_map
+        loss = loss
 
         loss = torch.mean(loss)
 
