@@ -1,4 +1,4 @@
 python tools/test.py \
-    configs/cityscapes/faster_rcnn_r50_fpn_1x_cityscapes.py \
-    work_dirs/faster_rcnn_r50_fpn_1x_cityscapes/epoch_8.pth  \
+    configs/cityscapes/fuda_faster_rcnn_r50_fpn_1x_cityscapes.py \
+    tools/work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_50.pth  \
     --show

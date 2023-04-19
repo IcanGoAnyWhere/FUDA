@@ -89,23 +89,42 @@ class FUDAFasterRCNN(TwoStageDetectorWithDA):
         """
 
         img_source = img[0]
-        img_target = img[1]
+        # img_target = img[1]
         fea_s = self.extract_feat(img_source)
-        fea_t = self.extract_feat(img_target)
+        # fea_t = self.extract_feat(img_target)
 
         img_metas_s = img_metas[0]
-        img_metas_t = img_metas[1]
+        # img_metas_t = img_metas[1]
 
-        gt_bboxes = gt_bboxes[0]
-        gt_labels = gt_labels[0]
+        gt_bboxes_s = gt_bboxes[0]
+        gt_labels_s = gt_labels[0]
+
+        # gt_bboxes_t = gt_bboxes[1]
+        # gt_labels_t = gt_labels[1]
+
+        # import numpy as np
+        # import cv2 as cv
+        #
+        # # imgbatch= cv.imread(img_metas_s[0]['filename'])
+        # imgbatch = np.transpose(img_source.squeeze(0).cpu().numpy(), (1, 2, 0)).astype(np.uint8).copy()
+        # for gt in gt_bboxes_s[0]:
+        #     gt = gt.round().cpu().numpy()
+        #     cv.rectangle(imgbatch, (int(gt[0]), int(gt[1])), (int(gt[2]),int(gt[3])), (0,0,255),3)
+        #
+        # cv.imshow('1', imgbatch)
+        # cv.waitKey(0)
+
+
 
         losses = dict()
 
         if self.da_image is not None:
             loss_img_s, uncertainty_map_s = self.da_image.forward(fea_s[4], torch.tensor(0))
-            loss_img_t, uncertainty_map_t = self.da_image.forward(fea_t[4], torch.tensor(1))
-            da_loss = dict(da_img_s_loss=torch.tensor(0) * loss_img_s,
-                           da_img_t_loss=torch.tensor(0) * loss_img_t)
+            # loss_img_t, uncertainty_map_t = self.da_image.forward(fea_t[4], torch.tensor(1))
+
+            # print('loss_img_s:',loss_img_s, 'loss_img_t:',loss_img_t)
+
+            # da_loss = dict(da_loss=torch.tensor(0.001) * (loss_img_s + loss_img_t))
             # losses.update(da_loss)
 
         # RPN forward and loss
@@ -115,7 +134,7 @@ class FUDAFasterRCNN(TwoStageDetectorWithDA):
             rpn_losses, proposal_list = self.rpn_head.forward_train(
                 fea_s,
                 img_metas_s,
-                gt_bboxes,
+                gt_bboxes_s,
                 gt_labels=None,
                 gt_bboxes_ignore=gt_bboxes_ignore,
                 proposal_cfg=proposal_cfg,
@@ -125,24 +144,25 @@ class FUDAFasterRCNN(TwoStageDetectorWithDA):
             proposal_list = proposals
 
         roi_losses_s = self.roi_head.forward_train(fea_s, uncertainty_map_s, img_metas_s, proposal_list,
-                                                 gt_bboxes, gt_labels,
+                                                 gt_bboxes_s, gt_labels_s,
                                                  gt_bboxes_ignore, gt_masks,
                                                  **kwargs)
 
-        roi_losses_t = self.roi_head.forward_train(fea_t, uncertainty_map_t, img_metas_t, proposal_list,
-                                                 gt_bboxes, gt_labels,
-                                                 gt_bboxes_ignore, gt_masks,
-                                                 **kwargs)
 
-        loss_cls_IUA = torch.abs(roi_losses_s['loss_cls_IUA'] - roi_losses_t['loss_cls_IUA'])
-        loss_bbox_IUA = torch.abs(roi_losses_s['loss_bbox_IUA'] - roi_losses_t['loss_bbox_IUA'])
+        # roi_losses_t = self.roi_head.forward_train(fea_t, uncertainty_map_t, img_metas_t, proposal_list,
+        #                                          gt_bboxes_t, gt_labels_t,
+        #                                          gt_bboxes_ignore, gt_masks,
+        #                                          **kwargs)
+
+        # loss_cls_IUA = torch.abs(roi_losses_s['loss_cls_IUA'] - roi_losses_t['loss_cls_IUA'])
+        # loss_bbox_IUA = torch.abs(roi_losses_s['loss_bbox_IUA'] - roi_losses_t['loss_bbox_IUA'])
 
         roi_losses = roi_losses_s
-        roi_losses['loss_cls_IUA'] = loss_cls_IUA * torch.tensor(0)
-        roi_losses['loss_bbox_IUA'] = loss_bbox_IUA * torch.tensor(0)
+        # roi_losses['loss_cls_IUA'] = loss_cls_IUA * torch.tensor(1)
+        # roi_losses['loss_bbox_IUA'] = loss_bbox_IUA * torch.tensor(1)
         losses.update(roi_losses_s)
-        losses.pop('loss_cls_IUA')
-        losses.pop('loss_bbox_IUA')
+        del losses['loss_cls_IUA']
+        del losses['loss_bbox_IUA']
 
 
         return losses

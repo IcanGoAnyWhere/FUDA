@@ -58,7 +58,7 @@ class IUAConvFCBBoxHead(BBoxHead):
         self.fc_out_channels = fc_out_channels
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
-        self.dropout = nn.Dropout(p=0.8)
+        self.dropout = nn.Dropout(p=0.85)
 
         # add shared convs and fcs
         self.shared_convs, self.shared_fcs, last_layer_dim = \
@@ -181,6 +181,9 @@ class IUAConvFCBBoxHead(BBoxHead):
         x_cls = x
         x_reg = x
 
+        # cls_score = self.fc_cls(self.dropout(x_cls))
+        # bbox_pred = self.fc_reg(self.dropout(x_reg))
+        #
         cls_score = self.fc_cls(self.dropout(x_cls))
         bbox_pred = self.fc_reg(self.dropout(x_reg))
 

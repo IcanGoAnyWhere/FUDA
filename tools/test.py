@@ -44,7 +44,7 @@ def parse_args():
         default='../configs/cityscapes/fuda_faster_rcnn_r50_fpn_1x_cityscapes.py')
     parser.add_argument(
         '--checkpoint', help='checkpoint file',
-        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_51.pth')
+        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_30.pth')
 
     # cityscapes================================================
 
@@ -57,7 +57,7 @@ def parse_args():
         ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
     parser.add_argument('--show',
                         # action='store_true',
-                        help='show results', default=False)
+                        help='show results', default=True)
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
     parser.add_argument(

@@ -1,12 +1,44 @@
 _base_ = [
-    '../_base_/models/fuda_faster_rcnn_r50_fpn.py',
-    # '../_base_/datasets/cityscapes_detection_foggy.py',
-    '../_base_/datasets/cityscapes_detection.py',
+    # '../_base_/models/fuda_faster_rcnn_r50_fpn.py',
+    '../_base_/datasets/cityscapes_detection_foggy.py',
+    # '../_base_/datasets/cityscapes_detection.py',
     '../_base_/default_runtime.py'
 ]
 
 model = dict(
-    backbone=dict(init_cfg=None),
+    type='FUDAFasterRCNN',
+    backbone=dict(
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_eval=True,
+        style='pytorch',
+        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
+    da_image=dict(type='FUA'),
+    neck=dict(
+        type='FPN',
+        in_channels=[256, 512, 1024, 2048],
+        out_channels=256,
+        num_outs=5),
+    rpn_head=dict(
+        type='RPNHead',
+        in_channels=256,
+        feat_channels=256,
+        anchor_generator=dict(
+            type='AnchorGenerator',
+            scales=[8],
+            ratios=[0.5, 1.0, 2.0],
+            strides=[4, 8, 16, 32, 64]),
+        bbox_coder=dict(
+            type='DeltaXYWHBBoxCoder',
+            target_means=[.0, .0, .0, .0],
+            target_stds=[1.0, 1.0, 1.0, 1.0]),
+        loss_cls=dict(
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
         type='IUARoIHead',
         Uncertain_map_extractor=dict(
@@ -22,6 +54,7 @@ model = dict(
         bbox_head=dict(
             type='IUABBoxHead',
             in_channels=256,
+            num_align_head=16,
             fc_out_channels=1024,
             roi_feat_size=7,
             num_classes=8,
@@ -32,7 +65,60 @@ model = dict(
             reg_class_agnostic=False,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))))
+            loss_bbox=dict(type='L1Loss', loss_weight=1.0))),
+    # model training and testing settings
+    train_cfg=dict(
+        rpn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.7,
+                neg_iou_thr=0.3,
+                min_pos_iou=0.3,
+                match_low_quality=True,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=256,
+                pos_fraction=0.5,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=False),
+            allowed_border=-1,
+            pos_weight=-1,
+            debug=False),
+        rpn_proposal=dict(
+            nms_pre=2000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.5,
+                neg_iou_thr=0.5,
+                min_pos_iou=0.5,
+                match_low_quality=False,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=512,
+                pos_fraction=0.25,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=True),
+            pos_weight=-1,
+            debug=False)),
+    test_cfg=dict(
+        rpn=dict(
+            nms_pre=1000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            score_thr=0.05,
+            nms=dict(type='nms', iou_threshold=0.5),
+            max_per_img=100)
+        # soft-nms is also supported for rcnn testing
+        # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
+    ))
 
 # dataset for FUDA
 
@@ -47,7 +133,7 @@ train_pipeline = [
     dict(type='LoadDaImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
-        type='Resize', img_scale=[(2048, 800), (2048, 1024)], keep_ratio=True),
+        type='Resize', img_scale=[(1024, 400), (1024, 512)], keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -58,7 +144,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(2048, 1024),
+        img_scale=(1024, 512),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -70,13 +156,13 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=2,
+    samples_per_gpu=8,
+    workers_per_gpu=16,
     # cityscapes
     train_source=dict(
         dict(
             type='RepeatDataset',
-            times=8,
+            times=1,
             dataset=dict(
                 type=dataset_type_train,
                 DA_mode=True,
@@ -122,7 +208,7 @@ lr_config = dict(
     # [7] yields higher performance than [6]
     step=[7])
 runner = dict(
-    type='EpochBasedRunner', max_epochs=60)  # actual epoch = 8 * 8 = 64
+    type='EpochBasedRunner', max_epochs=30)  # actual epoch = 8 * 8 = 64
 log_config = dict(interval=100)
 # For better, more stable performance initialize from COCO
 load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'  # noqa
@@ -130,4 +216,4 @@ load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_
 # NOTE: `auto_scale_lr` is for automatically scaling LR,
 # USER SHOULD NOT CHANGE ITS VALUES.
 # base_batch_size = (8 GPUs) x (1 samples per GPU)
-auto_scale_lr = dict(base_batch_size=1)
+auto_scale_lr = dict(base_batch_size=8)

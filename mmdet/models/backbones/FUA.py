@@ -35,22 +35,23 @@ class GRL(Function):
 class FUA(nn.Module):
     def __init__(self):
         super(FUA, self).__init__()
-        self.conv1 = nn.Conv2d(257, 256, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv1 = nn.Conv2d(272, 256, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(256)
         self.conv2 = nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(128)
         self.conv3 = nn.Conv2d(128, 1, kernel_size=1, stride=1, padding=0, bias=False)
 
-        self.conv_en1 = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding='same', bias=False)
-        self.bn_en1 = nn.BatchNorm2d(1)
-        self.conv_en2 = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding='same', bias=False)
-        self.bn_en2 = nn.BatchNorm2d(1)
+        self.conv_en1 = nn.Conv2d(256, 128, kernel_size=3, stride=1, padding='same', bias=False)
+        self.bn_en1 = nn.BatchNorm2d(128)
+        self.conv_en2 = nn.Conv2d(128, 16, kernel_size=3, stride=1, padding='same', bias=False)
+        self.bn_en2 = nn.BatchNorm2d(16)
 
     def forward(self, feature, domain):
         feature_GRL = GRL.apply(feature)
         cha_en = channel_entropy(feature_GRL)
 
-        uncertainty_map = F.relu(self.bn_en1(self.conv_en1(cha_en.unsqueeze(0))))
+        # uncertainty_map = F.relu(self.bn_en1(self.conv_en1(cha_en.unsqueeze(0))))
+        uncertainty_map = F.relu(self.bn_en1(self.conv_en1(feature_GRL)))
         uncertainty_map = F.relu(self.bn_en2(self.conv_en2(uncertainty_map)))
 
         fea_with_uncer = [feature_GRL, uncertainty_map]
@@ -64,9 +65,11 @@ class FUA(nn.Module):
 
         domain_label = domain * torch.ones_like(out)
         near_0 = 1e-10
-        loss = -domain_label * torch.log(out+near_0) - \
-               (torch.ones_like(out)-domain_label) * torch.log(torch.ones_like(out) - out + near_0)
-        loss = loss
+        loss1 = -domain_label * torch.log(out+near_0)
+
+        loss2 = -(torch.ones_like(out)-domain_label) * torch.log(torch.ones_like(out) - out + near_0)
+
+        loss = loss1 + loss2
 
         loss = torch.mean(loss)
 
