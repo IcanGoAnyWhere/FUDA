@@ -197,7 +197,7 @@ evaluation = dict(interval=1, metric='bbox')
 
 # optimizer
 # lr is set for a batch size of 8
-optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -208,8 +208,8 @@ lr_config = dict(
     # [7] yields higher performance than [6]
     step=[7])
 runner = dict(
-    type='EpochBasedRunner', max_epochs=30)  # actual epoch = 8 * 8 = 64
-log_config = dict(interval=100)
+    type='EpochBasedRunner', max_epochs=80)  # actual epoch = 8 * 8 = 64
+log_config = dict(interval=50)
 # For better, more stable performance initialize from COCO
 load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'  # noqa
 

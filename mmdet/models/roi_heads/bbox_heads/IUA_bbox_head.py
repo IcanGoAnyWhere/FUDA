@@ -259,7 +259,7 @@ class IUAConvFCBBoxHead(BBoxHead):
             else:
                 losses['loss_bbox'] = bbox_pred[pos_inds].sum()
 
-        near_0 = 1e-10
+        near_0 = torch.tensor(1e-10, dtype=torch.float32, requires_grad=True)
 
         if IUA_cls_score is not None:
             cls_matrix = torch.stack(IUA_cls_score)

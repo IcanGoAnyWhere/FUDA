@@ -56,8 +56,8 @@ def parse_args():
         help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
         ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
     parser.add_argument('--show',
-                        # action='store_true',
-                        help='show results', default=True)
+                        help='show results', default=False)
+
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
     parser.add_argument(
