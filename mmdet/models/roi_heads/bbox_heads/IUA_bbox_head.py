@@ -260,6 +260,8 @@ class IUAConvFCBBoxHead(BBoxHead):
                 losses['loss_bbox'] = bbox_pred[pos_inds].sum()
 
         near_0 = torch.tensor(1e-10, dtype=torch.float32, requires_grad=True)
+        bbox_uncertainty = bbox_results['bbox_uncertainty']
+        bbox_uncertainty = bbox_uncertainty.view(rois.size(0), 1)
 
         if IUA_cls_score is not None:
             cls_matrix = torch.stack(IUA_cls_score)
@@ -283,7 +285,7 @@ class IUAConvFCBBoxHead(BBoxHead):
             bbox_mean = torch.mean(bbox_matrix_T, dim=2).unsqueeze(-1)
             bbox_prob = torch.softmax(torch.abs(bbox_matrix_T / bbox_mean), dim=2)+near_0
             bbox_en = - torch.sum(torch.log(bbox_prob) * bbox_prob, dim=2)
-            loss_bbox_IUA =  torch.mean(bbox_en)
+            loss_bbox_IUA = torch.mean(bbox_en * bbox_uncertainty)
             losses['loss_bbox_IUA'] = loss_bbox_IUA
 
         return losses

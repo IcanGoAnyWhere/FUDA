@@ -58,14 +58,31 @@ class UncertaintyMapExtractor(BaseRoIExtractor):
     def forward(self, feats, rois, roi_scale_factor=None):
         """Forward function."""
         out_size = self.roi_layers[0].output_size
-        num_levels = len(feats)
-
-        roi_feats = feats.new_zeros(
-            rois.size(0), self.out_channels, *out_size)
+        num_levels = 4
+        expand_dims = (-1, self.out_channels * out_size[0] * out_size[1])
+        if torch.onnx.is_in_onnx_export():
+            # Work around to export mask-rcnn to onnx
+            roi_feats = rois[:, :1].clone().detach()
+            roi_feats = roi_feats.expand(*expand_dims)
+            roi_feats = roi_feats.reshape(-1, self.out_channels, *out_size)
+            roi_feats = roi_feats * 0
+        else:
+            roi_feats = feats[0].new_zeros(
+                rois.size(0), self.out_channels, *out_size)
 
         if num_levels == 1:
             if len(rois) == 0:
                 return roi_feats
-            return self.roi_layers[3](feats.unsqueeze(0), rois)
+            return self.roi_layers[0](feats[0], rois)
+
+        target_lvls = self.map_roi_levels(rois, num_levels)
+
+        mask = target_lvls == 1
+
+        inds = mask.nonzero(as_tuple=False).squeeze(1)
+        if inds.numel() > 0:
+            rois_ = rois[inds]
+            roi_feats_t = self.roi_layers[3](feats, rois_)
+            roi_feats[inds] = roi_feats_t
 
         return roi_feats

@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
         '--resume-from',
-        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_30.pth',
+        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_25.pth',
         help='the checkpoint file to resume from')
     parser.add_argument(
         '--auto-resume',

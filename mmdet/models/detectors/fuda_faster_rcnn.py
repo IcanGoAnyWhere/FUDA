@@ -170,8 +170,8 @@ class FUDAFasterRCNN(TwoStageDetectorWithDA):
         roi_losses['loss_bbox_IUA'] = loss_bbox_IUA * torch.tensor(1, dtype=torch.float32, requires_grad=True)
         losses.update(roi_losses)
 
-        del losses['loss_cls_IUA']
-        del losses['loss_bbox_IUA']
+        # del losses['loss_cls_IUA']
+        # del losses['loss_bbox_IUA']
 
 
         return losses

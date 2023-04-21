@@ -208,7 +208,7 @@ lr_config = dict(
     # [7] yields higher performance than [6]
     step=[7])
 runner = dict(
-    type='EpochBasedRunner', max_epochs=80)  # actual epoch = 8 * 8 = 64
+    type='EpochBasedRunner', max_epochs=50)  # actual epoch = 8 * 8 = 64
 log_config = dict(interval=50)
 # For better, more stable performance initialize from COCO
 load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'  # noqa

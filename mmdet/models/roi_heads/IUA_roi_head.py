@@ -165,7 +165,8 @@ class IUARoIHead(BaseRoIHead, MaskTestMixin):
             cls_score=cls_score, bbox_pred=bbox_pred,
             IUA_cls_score=IUA_cls_score,
             IUA_bbox_pred=IUA_bbox_pred,
-            bbox_feats=bbox_feats)
+            bbox_feats=bbox_feats,
+            bbox_uncertainty=bbox_uncertainty)
         return bbox_results
 
 

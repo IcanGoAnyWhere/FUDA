@@ -44,7 +44,7 @@ def parse_args():
         default='../configs/cityscapes/fuda_faster_rcnn_r50_fpn_1x_cityscapes.py')
     parser.add_argument(
         '--checkpoint', help='checkpoint file',
-        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_30.pth')
+        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/FUA_IUA_401.pth')
 
     # cityscapes================================================
 
@@ -308,7 +308,7 @@ def main():
                     'rule', 'dynamic_intervals'
             ]:
                 eval_kwargs.pop(key, None)
-            eval_kwargs.update(dict(metric=args.eval, **kwargs))
+            eval_kwargs.update(dict(metric=args.eval, iou_thrs=[0.5], **kwargs))
             metric = dataset.evaluate(outputs, **eval_kwargs)
             print(metric)
             metric_dict = dict(config=args.config, metric=metric)
