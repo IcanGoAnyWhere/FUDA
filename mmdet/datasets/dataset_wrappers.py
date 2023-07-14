@@ -59,7 +59,9 @@ class ConcatDatasetFUDA(_ConcatDataset):
         data_s = self.datasets[0][sample_idx]
         data_t = self.datasets[1][sample_idx]
 
-        dataset_concat = dict(img_metas=[data_s['img_metas'],
+
+        try:
+            dataset_concat = dict(img_metas=[data_s['img_metas'],
                                        data_t['img_metas']],
                               img=[data_s['img'],
                                        data_t['img']],
@@ -68,6 +70,12 @@ class ConcatDatasetFUDA(_ConcatDataset):
                               gt_labels=[data_s['gt_labels'],
                                          data_t['gt_labels']]
                                            )
+        except:
+            dataset_concat = dict(img_metas=[data_s['img_metas'],
+                                             data_t['img_metas']],
+                                  img=[data_s['img'],
+                                       data_t['img']],
+                                  )
 
         return dataset_concat
 

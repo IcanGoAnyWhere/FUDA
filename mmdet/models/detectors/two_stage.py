@@ -379,6 +379,9 @@ class TwoStageDetector(BaseDetector):
         return await self.roi_head.async_simple_test(
             x, proposal_list, img_meta, rescale=rescale)
 
+    def backbone_output(self,img):
+        x = self.extract_feat(img)
+        return x[3]
     def simple_test(self, img, img_metas, proposals=None, rescale=False):
         """Test without augmentation."""
 

@@ -5,14 +5,46 @@ import shutil
 import tempfile
 import time
 
+import matplotlib.pyplot as plt
 import mmcv
 import torch
 import torch.distributed as dist
 from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
-
+import numpy as np
 from mmdet.core import encode_mask_results
+from sklearn.manifold import TSNE
 
+def get_tSNE_2_domain(model, data):
+    xx_1 = model.backbone_output(data['img'][0][0])
+    xx_1 = xx_1.view(-1, 16 * 32)
+    xx_1 = xx_1.cpu().detach().numpy()
+
+    xx_2 = model.backbone_output(data['img'][1][0])
+    xx_2 = xx_2.view(-1, 16 * 32)
+    xx_2 = xx_2.cpu().detach().numpy()
+
+    xx_tsne_1 = TSNE(n_components=2, init='pca').fit_transform(xx_1)
+    xx_tsne_2 = TSNE(n_components=2, init='pca').fit_transform(xx_2)
+    return xx_tsne_1, xx_tsne_2
+
+
+def tSNE_test(model, data_loader):
+
+
+    model.eval()
+    fea_buf = []
+    for i, data in enumerate(data_loader):
+        xx_tsne_1, xx_tsne_2 = get_tSNE_2_domain(model, data)
+
+        plt.scatter(xx_tsne_1[:, 0], xx_tsne_1[:, 1],c='black',marker='s')
+        plt.scatter(xx_tsne_2[:, 0], xx_tsne_2[:, 1],c='red',marker='o')
+        plt.show()
+
+        # fea_buf.append(xx)
+        print(i)
+
+    return fea_buf
 
 def single_gpu_test(model,
                     data_loader,

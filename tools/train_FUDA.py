@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
         '--resume-from',
-        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/epoch_25.pth',
+        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/FUA387.pth',
         help='the checkpoint file to resume from')
     parser.add_argument(
         '--auto-resume',
@@ -240,23 +240,6 @@ def main():
             CLASSES=datasets[0].CLASSES)
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
-
-    # freeze
-    # ct = 0
-    # for child in model.children():
-    #     for para in child.parameters():
-    #         if ct == 3:
-    #             para.requires_grad = False
-    #     if ct == 4:
-    #         fc_cls = child.bbox_head.fc_cls
-    #         for para_1 in fc_cls.parameters():
-    #             para_1.requires_grad = False
-    #         fc_reg = child.bbox_head.fc_reg
-    #         for para_2 in fc_reg.parameters():
-    #              para_2.requires_grad = False
-    #     ct += 1
-
-
     train_detector(
         model,
         datasets,

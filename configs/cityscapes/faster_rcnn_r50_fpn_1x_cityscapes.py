@@ -1,6 +1,6 @@
 _base_ = [
     '../_base_/models/faster_rcnn_r50_fpn.py',
-    '../_base_/datasets/cityscapes_detection.py',
+    '../_base_/datasets/cityscapes_detection_foggy.py',
     '../_base_/default_runtime.py'
 ]
 model = dict(
@@ -34,7 +34,7 @@ lr_config = dict(
     # [7] yields higher performance than [6]
     step=[7])
 runner = dict(
-    type='EpochBasedRunner', max_epochs=60)  # actual epoch = 8 * 8 = 64
+    type='EpochBasedRunner', max_epochs=70)  # actual epoch = 8 * 8 = 64
 log_config = dict(interval=100)
 # For better, more stable performance initialize from COCO
 load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'  # noqa
@@ -42,4 +42,4 @@ load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_
 # NOTE: `auto_scale_lr` is for automatically scaling LR,
 # USER SHOULD NOT CHANGE ITS VALUES.
 # base_batch_size = (8 GPUs) x (1 samples per GPU)
-auto_scale_lr = dict(base_batch_size=8)
+auto_scale_lr = dict(base_batch_size=4)

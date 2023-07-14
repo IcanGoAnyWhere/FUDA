@@ -171,7 +171,7 @@ data = dict(
                           data_root_target +
                          'annotations/instancesonly_filtered_gtFine_train.json'
                           ],
-                img_prefix=[data_root_source + 'leftImg8bit/train/',
+                img_prefix=[data_root_source + 'leftImg8bit/val/',
                           data_root_target + 'leftImg8bit_foggy/train/'
                             ],
                 pipeline=train_pipeline)
