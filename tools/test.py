@@ -41,10 +41,10 @@ def parse_args():
 
     parser.add_argument(
         '--config', help='test config file path',
-        default='../configs/cityscapes/faster_rcnn_r50_fpn_1x_cityscapes.py')
+        default='../configs/cityscapes/fuda_faster_rcnn_r50_fpn_1x_cityscapes.py')
     parser.add_argument(
         '--checkpoint', help='checkpoint file',
-        default='./work_dirs/faster_rcnn_r50_fpn_1x_cityscapes/normal.pth')
+        default='./work_dirs/fuda_faster_rcnn_r50_fpn_1x_cityscapes/FUA_IUA_401.pth')
 
     # cityscapes================================================
 
@@ -56,7 +56,7 @@ def parse_args():
         help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
         ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
     parser.add_argument('--show',
-                        action='store_true',
+                        # action='store_true',
                         help='show results', default=True)
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')

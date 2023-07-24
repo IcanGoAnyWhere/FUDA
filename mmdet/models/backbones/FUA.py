@@ -55,7 +55,7 @@ class FUA(nn.Module):
         uncertainty_map = F.relu(self.bn_en2(self.conv_en2(uncertainty_map)))
 
         fea_with_uncer = feature_GRL * uncertainty_map
-        # fea_with_uncer = torch.cat(fea_with_uncer, dim=1)
+        # fea_with_uncer = feature_GRL
 
         x = F.relu(self.bn1(self.conv1(fea_with_uncer)))
         x = F.relu(self.bn2(self.conv2(x)))

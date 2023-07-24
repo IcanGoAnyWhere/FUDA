@@ -171,25 +171,24 @@ data = dict(
                           data_root_target +
                          'annotations/instancesonly_filtered_gtFine_train.json'
                           ],
-                img_prefix=[data_root_source + 'leftImg8bit/val/',
+                img_prefix=[data_root_source + 'leftImg8bit/train/',
                           data_root_target + 'leftImg8bit_foggy/train/'
                             ],
                 pipeline=train_pipeline)
         )),
 
-
-    # val=dict(
-    #     type=dataset_type_val,
-    #     ann_file=data_root_target +
-    #              'annotations/instancesonly_filtered_gtFine_val.json',
-    #     img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
-    #     pipeline=test_pipeline),
-    # test=dict(
-    #     type=dataset_type_val,
-    #     ann_file=data_root_target +
-    #              'annotations/instancesonly_filtered_gtFine_val.json',
-    #     img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
-    #     pipeline=test_pipeline)
+    val=dict(
+        type=dataset_type_val,
+        ann_file=data_root_target +
+                 'annotations/instancesonly_filtered_gtFine_val.json',
+        img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
+        pipeline=test_pipeline),
+    test=dict(
+        type=dataset_type_val,
+        ann_file=data_root_target +
+                 'annotations/instancesonly_filtered_gtFine_val.json',
+        img_prefix=data_root_target + 'leftImg8bit_foggy/val/',
+        pipeline=test_pipeline)
 )
 
 

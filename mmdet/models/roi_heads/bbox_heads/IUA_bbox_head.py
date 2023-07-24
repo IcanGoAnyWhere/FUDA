@@ -285,7 +285,9 @@ class IUAConvFCBBoxHead(BBoxHead):
             bbox_mean = torch.mean(bbox_matrix_T, dim=2).unsqueeze(-1)
             bbox_prob = torch.softmax(torch.abs(bbox_matrix_T / bbox_mean), dim=2)+near_0
             bbox_en = - torch.sum(torch.log(bbox_prob) * bbox_prob, dim=2)
+
             loss_bbox_IUA = torch.mean(bbox_en * bbox_uncertainty)
+            # loss_bbox_IUA = torch.mean(bbox_en )
             losses['loss_bbox_IUA'] = loss_bbox_IUA
 
         return losses
